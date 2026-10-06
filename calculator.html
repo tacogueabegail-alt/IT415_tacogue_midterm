@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator Application</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        calc: {
+                            dark: '#0f172a',
+                            panel: '#1e293b',
+                            accent: '#6366f1',
+                            accentHover: '#4f46e5',
+                            op: '#3b82f6',
+                            opHover: '#2563eb',
+                            func: '#334155',
+                            funcHover: '#475569',
+                            num: '#1e293b',
+                            numHover: '#334155'
+                        }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(99, 102, 241, 0.35)',
+                        'btn': '0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        /* Custom scrollbar for history panel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.5);
+        }
+        .btn-active {
+            transform: scale(0.95);
+            filter: brightness(1.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-6 transition-colors duration-300">
+
+    <!-- Main Calculator Container -->
+    <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 transition-colors duration-300">
+        
+        <!-- Top Toolbar -->
+        <div class="flex items-center justify-between p-4 px-6 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50">
+            <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                <span class="ml-2 font-semibold text-xs tracking-wider uppercase text-slate-400">Calc Pro</span>
+            </div>
+            
+            <div class="flex items-center space-x-1">
+                <!-- Sound Toggle -->
+                <button id="soundToggle" class="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Toggle Sound">
+                    <svg id="soundOnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                    <svg id="soundOffIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+                </button>
+                <!-- History Toggle -->
+                <button id="historyToggle" class="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Calculation History">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </button>
+                <!-- Theme Toggle -->
+                <button id="themeToggle" class="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors" title="Toggle Theme">
+                    <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Calculator Display Area -->
+        <div class="p-6 bg-slate-50/80 dark:bg-slate-900/80 text-right flex flex-col justify-end min-h-[140px] relative overflow-hidden">
+            <!-- Toast Copy Notification -->
+            <div id="copyToast" class="absolute top-2 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none">
+                Copied to clipboard!
+            </div>
+
+            <!-- History Preview Expression -->
+            <div id="expressionDisplay" class="text-slate-400 dark:text-slate-400 text-sm font-medium tracking-wider h-6 overflow-x-auto whitespace-nowrap scrollbar-none mb-1">
+                &nbsp;
+            </div>
+
+            <!-- Main Input/Result Display -->
+            <div class="flex items-center justify-end space-x-2">
+                <button id="copyBtn" class="opacity-0 hover:opacity-100 focus:opacity-100 text-slate-400 hover:text-indigo-500 transition-opacity p-1" title="Copy Result">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </button>
+                <div id="mainDisplay" class="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800 dark:text-white overflow-x-auto whitespace-nowrap scrollbar-none max-w-full">
+                    0
+                </div>
+            </div>
+        </div>
+
+        <!-- Keypad Grid -->
+        <div class="p-5 grid grid-cols-4 gap-3 bg-slate-100/60 dark:bg-slate-900/40">
+            <!-- Row 1 -->
+            <button data-action="clear" class="btn bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/60 h-14 rounded-2xl font-semibold text-lg transition-all active:scale-95 shadow-sm">AC</button>
+            <button data-action="delete" class="btn bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 h-14 rounded-2xl font-semibold text-lg transition-all active:scale-95 shadow-sm flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414-6.414a2 2 0 011.414-.586H19a2 2 0 012 2v12a2 2 0 01-2 2H10.828a2 2 0 01-1.414-.586L3 12z"></path></svg>
+            </button>
+            <button data-action="percent" class="btn bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 h-14 rounded-2xl font-semibold text-lg transition-all active:scale-95 shadow-sm">%</button>
+            <button data-action="operator" data-val="/" class="btn bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/80 h-14 rounded-2xl font-bold text-xl transition-all active:scale-95 shadow-sm">÷</button>
+
+            <!-- Row 2 -->
+            <button data-key="7" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">7</button>
+            <button data-key="8" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">8</button>
+            <button data-key="9" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">9</button>
+            <button data-action="operator" data-val="*" class="btn bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/80 h-14 rounded-2xl font-bold text-xl transition-all active:scale-95 shadow-sm">×</button>
+
+            <!-- Row 3 -->
+            <button data-key="4" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">4</button>
+            <button data-key="5" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">5</button>
+            <button data-key="6" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">6</button>
+            <button data-action="operator" data-val="-" class="btn bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/80 h-14 rounded-2xl font-bold text-xl transition-all active:scale-95 shadow-sm">−</button>
+
+            <!-- Row 4 -->
+            <button data-key="1" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">1</button>
+            <button data-key="2" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">2</button>
+            <button data-key="3" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">3</button>
+            <button data-action="operator" data-val="+" class="btn bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/80 h-14 rounded-2xl font-bold text-xl transition-all active:scale-95 shadow-sm">+</button>
+
+            <!-- Row 5 -->
+            <button data-action="toggle-sign" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">±</button>
+            <button data-key="0" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-semibold text-xl transition-all active:scale-95 shadow-sm">0</button>
+            <button data-action="decimal" class="btn bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 h-14 rounded-2xl font-bold text-xl transition-all active:scale-95 shadow-sm">.</button>
+            <button data-action="equals" class="btn bg-indigo-600 hover:bg-indigo-500 text-white h-14 rounded-2xl font-bold text-2xl transition-all active:scale-95 shadow-glow flex items-center justify-center">=</button>
+        </div>
+
+        <!-- Slide-out History Drawer -->
+        <div id="historyDrawer" class="absolute inset-0 bg-white dark:bg-slate-900 translate-y-full transition-transform duration-300 ease-in-out flex flex-col z-20">
+            <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Calculation History
+                </h3>
+                <div class="flex items-center space-x-2">
+                    <button id="clearHistoryBtn" class="text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                        Clear All
+                    </button>
+                    <button id="closeHistoryBtn" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="historyList" class="flex-1 p-4 overflow-y-auto space-y-3">
+                <!-- Dynamic history items injected here -->
+                <div class="text-center text-slate-400 text-sm py-12">
+                    No calculations yet
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Web Audio API Synth for Button Clicks
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+            }
+
+            playClick(freq = 600, type = 'sine', duration = 0.04) {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    
+                    if (this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    
+                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    console.warn("Audio playback not allowed yet", e);
+                }
+            }
+        }
+
+        const soundEngine = new SoundEngine();
+
+        // Calculator Logic Engine
+        const calculator = {
+            currentInput: '0',
+            previousInput: '',
+            operator: null,
+            shouldResetInput: false,
+            history: [],
+
+            appendDigit(digit) {
+                if (this.shouldResetInput) {
+                    this.currentInput = digit;
+                    this.shouldResetInput = false;
+                } else {
+                    if (this.currentInput === '0') {
+                        this.currentInput = digit;
+                    } else {
+                        if (this.currentInput.replace('-', '').length >= 12) return; // Character limit
+                        this.currentInput += digit;
+                    }
+                }
+            },
+
+            appendDecimal() {
+                if (this.shouldResetInput) {
+                    this.currentInput = '0.';
+                    this.shouldResetInput = false;
+                    return;
+                }
+                if (!this.currentInput.includes('.')) {
+                    this.currentInput += '.';
+                }
+            },
+
+            setOperator(op) {
+                if (this.operator && !this.shouldResetInput) {
+                    this.calculate();
+                }
+                this.previousInput = this.currentInput;
+                this.operator = op;
+                this.shouldResetInput = true;
+            },
+
+            calculate() {
+                if (!this.operator || this.previousInput === '') return;
+
+                const prev = parseFloat(this.previousInput);
+                const current = parseFloat(this.currentInput);
+                let result = 0;
+
+                if (isNaN(prev) || isNaN(current)) return;
+
+                switch (this.operator) {
+                    case '+':
+                        result = prev + current;
+                        break;
+                    case '-':
+                        result = prev - current;
+                        break;
+                    case '*':
+                        result = prev * current;
+                        break;
+                    case '/':
+                        if (current === 0) {
+                            this.currentInput = 'Error';
+                            this.previousInput = '';
+                            this.operator = null;
+                            this.shouldResetInput = true;
+                            return;
+                        }
+                        result = prev / current;
+                        break;
+                }
+
+                // Handle precision rounding
+                result = Math.round(result * 1e10) / 1e10;
+
+                const expressionString = `${this.previousInput} ${this.getOperatorSymbol(this.operator)} ${this.currentInput}`;
+                
+                // Save to history
+                this.history.unshift({
+                    expression: expressionString,
+                    result: result.toString()
+                });
+
+                this.currentInput = result.toString();
+                this.operator = null;
+                this.previousInput = '';
+                this.shouldResetInput = true;
+            },
+
+            clear() {
+                this.currentInput = '0';
+                this.previousInput = '';
+                this.operator = null;
+                this.shouldResetInput = false;
+            },
+
+            delete() {
+                if (this.shouldResetInput) return;
+                if (this.currentInput.length === 1 || (this.currentInput.length === 2 && this.currentInput.startsWith('-'))) {
+                    this.currentInput = '0';
+                } else {
+                    this.currentInput = this.currentInput.slice(0, -1);
+                }
+            },
+
+            toggleSign() {
+                if (this.currentInput === '0') return;
+                if (this.currentInput.startsWith('-')) {
+                    this.currentInput = this.currentInput.substring(1);
+                } else {
+                    this.currentInput = '-' + this.currentInput;
+                }
+            },
+
+            percent() {
+                const val = parseFloat(this.currentInput);
+                if (!isNaN(val)) {
+                    this.currentInput = (val / 100).toString();
+                }
+            },
+
+            getOperatorSymbol(op) {
+                switch (op) {
+                    case '+': return '+';
+                    case '-': return '−';
+                    case '*': return '×';
+                    case '/': return '÷';
+                    default: return '';
+                }
+            }
+        };
+
+        // DOM Elements
+        const mainDisplay = document.getElementById('mainDisplay');
+        const expressionDisplay = document.getElementById('expressionDisplay');
+        const historyDrawer = document.getElementById('historyDrawer');
+        const historyList = document.getElementById('historyList');
+        const historyToggle = document.getElementById('historyToggle');
+        const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const soundToggle = document.getElementById('soundToggle');
+        const soundOnIcon = document.getElementById('soundOnIcon');
+        const soundOffIcon = document.getElementById('soundOffIcon');
+        const themeToggle = document.getElementById('themeToggle');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyToast = document.getElementById('copyToast');
+
+        // Render functions
+        function updateDisplay() {
+            mainDisplay.textContent = calculator.currentInput;
+            
+            // Adjust font size dynamically for long numbers
+            const length = calculator.currentInput.length;
+            if (length > 11) {
+                mainDisplay.className = "text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 dark:text-white overflow-x-auto whitespace-nowrap scrollbar-none max-w-full";
+            } else if (length > 8) {
+                mainDisplay.className = "text-3xl sm:text-4xl font-bold tracking-tight text-slate-800 dark:text-white overflow-x-auto whitespace-nowrap scrollbar-none max-w-full";
+            } else {
+                mainDisplay.className = "text-4xl sm:text-5xl font-bold tracking-tight text-slate-800 dark:text-white overflow-x-auto whitespace-nowrap scrollbar-none max-w-full";
+            }
+
+            if (calculator.operator && calculator.previousInput !== '') {
+                expressionDisplay.textContent = `${calculator.previousInput} ${calculator.getOperatorSymbol(calculator.operator)}`;
+            } else {
+                expressionDisplay.innerHTML = '&nbsp;';
+            }
+
+            // Show copy button if not 0 or error
+            if (calculator.currentInput !== '0' && calculator.currentInput !== 'Error') {
+                copyBtn.classList.remove('opacity-0');
+            } else {
+                copyBtn.classList.add('opacity-0');
+            }
+        }
+
+        function renderHistory() {
+            if (calculator.history.length === 0) {
+                historyList.innerHTML = `
+                    <div class="text-center text-slate-400 dark:text-slate-500 text-sm py-12">
+                        No history records available
+                    </div>`;
+                return;
+            }
+
+            historyList.innerHTML = calculator.history.map((item, idx) => `
+                <div class="p-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-indigo-50/50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer group border border-slate-100 dark:border-slate-800" data-history-idx="${idx}">
+                    <div class="text-xs text-slate-400 dark:text-slate-400 font-medium text-right group-hover:text-indigo-500 transition-colors">${item.expression} =</div>
+                    <div class="text-lg font-bold text-slate-800 dark:text-slate-100 text-right">${item.result}</div>
+                </div>
+            `).join('');
+
+            // Attach event listeners to history items
+            historyList.querySelectorAll('[data-history-idx]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const idx = parseInt(el.getAttribute('data-history-idx'));
+                    calculator.currentInput = calculator.history[idx].result;
+                    calculator.shouldResetInput = true;
+                    updateDisplay();
+                    closeHistory();
+                    soundEngine.playClick(700, 'sine');
+                });
+            });
+        }
+
+        function openHistory() {
+            renderHistory();
+            historyDrawer.classList.remove('translate-y-full');
+        }
+
+        function closeHistory() {
+            historyDrawer.classList.add('translate-y-full');
+        }
+
+        // Button Clicks Handler
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const key = button.getAttribute('data-key');
+                const action = button.getAttribute('data-action');
+                const val = button.getAttribute('data-val');
+
+                if (key !== null) {
+                    calculator.appendDigit(key);
+                    soundEngine.playClick(500, 'sine');
+                } else if (action === 'operator') {
+                    calculator.setOperator(val);
+                    soundEngine.playClick(650, 'triangle');
+                } else if (action === 'equals') {
+                    calculator.calculate();
+                    soundEngine.playClick(800, 'sine');
+                } else if (action === 'clear') {
+                    calculator.clear();
+                    soundEngine.playClick(300, 'sawtooth');
+                } else if (action === 'delete') {
+                    calculator.delete();
+                    soundEngine.playClick(350, 'square');
+                } else if (action === 'decimal') {
+                    calculator.appendDecimal();
+                    soundEngine.playClick(550, 'sine');
+                } else if (action === 'toggle-sign') {
+                    calculator.toggleSign();
+                    soundEngine.playClick(450, 'sine');
+                } else if (action === 'percent') {
+                    calculator.percent();
+                    soundEngine.playClick(600, 'sine');
+                }
+
+                updateDisplay();
+            });
+        });
+
+        // Keyboard Support
+        window.addEventListener('keydown', (e) => {
+            // Prevent scrolling on space bar / arrows if targeted
+            if (e.key === ' ') e.preventDefault();
+
+            let targetBtn = null;
+
+            if (e.key >= '0' && e.key <= '9') {
+                calculator.appendDigit(e.key);
+                targetBtn = document.querySelector(`[data-key="${e.key}"]`);
+                soundEngine.playClick(500, 'sine');
+            } else if (e.key === '.') {
+                calculator.appendDecimal();
+                targetBtn = document.querySelector('[data-action="decimal"]');
+                soundEngine.playClick(550, 'sine');
+            } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                calculator.setOperator(e.key);
+                targetBtn = document.querySelector(`[data-val="${e.key}"]`);
+                soundEngine.playClick(650, 'triangle');
+            } else if (e.key === 'Enter' || e.key === '=') {
+                e.preventDefault();
+                calculator.calculate();
+                targetBtn = document.querySelector('[data-action="equals"]');
+                soundEngine.playClick(800, 'sine');
+            } else if (e.key === 'Backspace') {
+                calculator.delete();
+                targetBtn = document.querySelector('[data-action="delete"]');
+                soundEngine.playClick(350, 'square');
+            } else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {
+                calculator.clear();
+                targetBtn = document.querySelector('[data-action="clear"]');
+                soundEngine.playClick(300, 'sawtooth');
+            } else if (e.key === '%') {
+                calculator.percent();
+                targetBtn = document.querySelector('[data-action="percent"]');
+                soundEngine.playClick(600, 'sine');
+            }
+
+            if (targetBtn) {
+                targetBtn.classList.add('btn-active');
+                setTimeout(() => targetBtn.classList.remove('btn-active'), 150);
+            }
+
+            updateDisplay();
+        });
+
+        // Copy functionality
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = calculator.currentInput;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy);
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+
+            // Show Toast
+            copyToast.classList.remove('opacity-0');
+            setTimeout(() => {
+                copyToast.classList.add('opacity-0');
+            }, 1800);
+        });
+
+        // History Toggle Events
+        historyToggle.addEventListener('click', openHistory);
+        closeHistoryBtn.addEventListener('click', closeHistory);
+        clearHistoryBtn.addEventListener('click', () => {
+            calculator.history = [];
+            renderHistory();
+        });
+
+        // Sound Toggle
+        soundToggle.addEventListener('click', () => {
+            soundEngine.enabled = !soundEngine.enabled;
+            if (soundEngine.enabled) {
+                soundOnIcon.classList.remove('hidden');
+                soundOffIcon.classList.add('hidden');
+            } else {
+                soundOnIcon.classList.add('hidden');
+                soundOffIcon.classList.remove('hidden');
+            }
+        });
+
+        // Dark/Light Theme Toggle
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Initial update
+        updateDisplay();
+    </script>
+</body>
+</html>
